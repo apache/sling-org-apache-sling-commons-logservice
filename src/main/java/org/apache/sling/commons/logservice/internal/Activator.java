@@ -16,16 +16,12 @@
  */
 package org.apache.sling.commons.logservice.internal;
 
-import java.util.Dictionary;
-import java.util.Hashtable;
-
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.log.LogReaderService;
-import org.osgi.service.log.LogService;
-import org.osgi.service.startlevel.StartLevel;
+import org.osgi.util.tracker.ServiceTracker;
+import org.osgi.util.tracker.ServiceTrackerCustomizer;
 
 /**
  * The <code>Activator</code> class is the <code>BundleActivator</code> for the
@@ -34,55 +30,51 @@ import org.osgi.service.startlevel.StartLevel;
  */
 public class Activator implements BundleActivator {
 
-    private static final String VENDOR = "The Apache Software Foundation";
-
-    private LogSupport logSupport;
-
-    /** Reference to the start level service. */
-    private ServiceReference startLevelRef;
+    private volatile ServiceTracker<LogReaderService, LogReaderService> logReaderTracker;
 
     /**
      * @see org.osgi.framework.BundleActivator#start(org.osgi.framework.BundleContext)
      */
+    @Override
     public void start(final BundleContext context) throws Exception {
-        // get start level service, it's always there (required by the spec)
-        startLevelRef = context.getServiceReference(StartLevel.class.getName());
+        final SLF4JSupport listener = new SLF4JSupport();
+        this.logReaderTracker = new ServiceTracker<>(context, LogReaderService.class,
+                new ServiceTrackerCustomizer<LogReaderService, LogReaderService>() {
 
-        logSupport = new LogSupport((StartLevel)context.getService(startLevelRef));
-        context.addBundleListener(logSupport);
-        context.addFrameworkListener(logSupport);
-        context.addServiceListener(logSupport);
+                    @Override
+                    public LogReaderService addingService(final ServiceReference<LogReaderService> reference) {
+                        final LogReaderService srvc = context.getService(reference);
+                        if (srvc != null) {
+                            srvc.addLogListener(listener);
+                            listener.replay(srvc.getLog());
+                        }
+                        return srvc;
+                    }
 
-        LogServiceFactory lsf = new LogServiceFactory(logSupport);
-        Dictionary<String, String> props = new Hashtable<String, String>();
-        props.put(Constants.SERVICE_PID, lsf.getClass().getName());
-        props.put(Constants.SERVICE_DESCRIPTION,
-            "Apache Sling LogService implementation");
-        props.put(Constants.SERVICE_VENDOR, VENDOR);
-        context.registerService(LogService.class.getName(), lsf, props);
+                    @Override
+                    public void modifiedService(final ServiceReference<LogReaderService> reference,
+                            final LogReaderService service) {
+                        // nothing to do
+                    }
 
-        LogReaderServiceFactory lrsf = new LogReaderServiceFactory(logSupport);
-        props = new Hashtable<String, String>();
-        props.put(Constants.SERVICE_PID, lrsf.getClass().getName());
-        props.put(Constants.SERVICE_DESCRIPTION,
-            "Apache Sling LogReaderService implementation");
-        props.put(Constants.SERVICE_VENDOR, VENDOR);
-        context.registerService(LogReaderService.class.getName(), lrsf, props);
+                    @Override
+                    public void removedService(final ServiceReference<LogReaderService> reference,
+                            final LogReaderService service) {
+                        service.removeLogListener(listener);
+
+                    }
+                });
+        this.logReaderTracker.open();
     }
 
     /**
      * @see org.osgi.framework.BundleActivator#stop(org.osgi.framework.BundleContext)
      */
+    @Override
     public void stop(final BundleContext context) throws Exception {
-        if ( startLevelRef != null ) {
-            context.ungetService(startLevelRef);
-        }
-        if (logSupport != null) {
-            context.removeBundleListener(logSupport);
-            context.removeFrameworkListener(logSupport);
-            context.removeServiceListener(logSupport);
-            logSupport.shutdown();
-            logSupport = null;
+        if (this.logReaderTracker != null) {
+            this.logReaderTracker.close();
+            this.logReaderTracker = null;
         }
     }
 }
