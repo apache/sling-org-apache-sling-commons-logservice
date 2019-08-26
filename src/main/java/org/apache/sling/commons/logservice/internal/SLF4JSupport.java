@@ -25,6 +25,7 @@ import java.util.List;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.service.component.ComponentConstants;
 import org.osgi.service.log.LogEntry;
 import org.osgi.service.log.LogListener;
@@ -36,6 +37,30 @@ import org.slf4j.LoggerFactory;
  */
 public class SLF4JSupport implements LogListener {
 
+    /**
+     * The service property name of the component name (value is "component.name").
+     * Note: We use a private constant here to not create a unneeded dependency on
+     * the org.osgi.service.component package.
+     */
+    private static final String COMPONENT_NAME = ComponentConstants.COMPONENT_NAME; // "component.name";
+
+    private static final String LOGGER_EVENT_FRAMEWORK = "Events.Framework";
+    private static final String LOGGER_EVENT_BUNDLE = "Events.Bundle";
+    private static final String LOGGER_EVENT_SERVICE = "Events.Service";
+    private static final String LOGGER_EVENT_LOG_SERVICE = "LogService";
+
+    private static final String SL_MARKER = "STARTLEVEL CHANGED";
+
+    /** Framework start level. */
+    private final FrameworkStartLevel startLevel;
+
+    private final List<String> logServiceLoggers = Arrays.asList(LOGGER_EVENT_FRAMEWORK, LOGGER_EVENT_BUNDLE,
+            LOGGER_EVENT_SERVICE, LOGGER_EVENT_LOG_SERVICE);
+
+    public SLF4JSupport(final FrameworkStartLevel startLevel) {
+        this.startLevel = startLevel;
+    }
+
     @Override
     public void logged(final LogEntry logEntry) {
         doLog(logEntry);
@@ -43,22 +68,15 @@ public class SLF4JSupport implements LogListener {
 
     private void doLog(final LogEntry logEntry) {
         // get the logger for the bundle
-        final boolean isLogService = "LogService".equals(logEntry.getLoggerName());
+        final boolean isLogService = logServiceLoggers.contains(logEntry.getLoggerName());
         final Logger logger = LoggerFactory
                 .getLogger(isLogService ? getLoggerName(logEntry.getBundle()) : logEntry.getLoggerName());
         if (!isEnabled(logger, logEntry)) {
-            // early Exit, this message will not be logged, don't do any work...
+            // early exit, this message will not be logged, don't do any work...
             return;
         }
         logOut(logger, logEntry);
     }
-
-    /**
-     * The service property name of the component name (value is "component.name").
-     * Note: We use a private constant here to not create a unneeded dependency on
-     * the org.osgi.service.component package.
-     */
-    private static final String COMPONENT_NAME = ComponentConstants.COMPONENT_NAME; // "component.name";
 
     private String getLoggerName(final Bundle bundle) {
         String name;
@@ -112,6 +130,10 @@ public class SLF4JSupport implements LogListener {
 
         if (logEntry.getMessage() != null) {
             msg.append(logEntry.getMessage());
+            if (LOGGER_EVENT_FRAMEWORK.equals(logEntry.getLoggerName()) && logEntry.getMessage().contains(SL_MARKER)) {
+                msg.append(" to ");
+                msg.append(String.valueOf(this.startLevel.getStartLevel()));
+            }
         }
 
         Throwable exception = logEntry.getException();
@@ -136,8 +158,8 @@ public class SLF4JSupport implements LogListener {
         case TRACE:
                 logger.trace(message, exception);
                 break;
-        case AUDIT: // we treat audit as info for now as there is no audit in slf4j (TODO)
-            logger.info(message, exception);
+        case AUDIT: // we treat audit as trace
+            logger.trace(message, exception);
             break;
         }
     }
@@ -154,8 +176,8 @@ public class SLF4JSupport implements LogListener {
             return logger.isErrorEnabled();
         case TRACE:
             return logger.isTraceEnabled();
-        case AUDIT: // we treat audit as info for now as there is no audit in slf4j (TODO)
-            return logger.isInfoEnabled();
+        case AUDIT: // we treat audit as trace
+            return logger.isTraceEnabled();
         }
         return false;
     }

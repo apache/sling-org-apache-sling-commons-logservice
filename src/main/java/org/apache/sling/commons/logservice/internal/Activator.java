@@ -16,9 +16,12 @@
  */
 package org.apache.sling.commons.logservice.internal;
 
+import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.Constants;
 import org.osgi.framework.ServiceReference;
+import org.osgi.framework.startlevel.FrameworkStartLevel;
 import org.osgi.service.log.LogReaderService;
 import org.osgi.util.tracker.ServiceTracker;
 import org.osgi.util.tracker.ServiceTrackerCustomizer;
@@ -37,7 +40,10 @@ public class Activator implements BundleActivator {
      */
     @Override
     public void start(final BundleContext context) throws Exception {
-        final SLF4JSupport listener = new SLF4JSupport();
+        // get framework start level
+        final Bundle systemBundle = context.getBundle(Constants.SYSTEM_BUNDLE_ID);
+
+        final SLF4JSupport listener = new SLF4JSupport(systemBundle.adapt(FrameworkStartLevel.class));
         this.logReaderTracker = new ServiceTracker<>(context, LogReaderService.class,
                 new ServiceTrackerCustomizer<LogReaderService, LogReaderService>() {
 
