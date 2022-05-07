@@ -98,6 +98,11 @@
             <artifactId>org.osgi.service.component</artifactId>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.annotation.bundle</artifactId>
+            <scope>provided</scope>
+        </dependency>
         
     <!-- testing -->
         <dependency>

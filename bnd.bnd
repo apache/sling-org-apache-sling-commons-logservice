@@ -1,3 +1,1 @@
-Import-Package: !java.lang, !java.util.*, *
-Bundle-Activator: org.apache.sling.commons.logservice.internal.Activator
 Bundle-DocURL: https://sling.apache.org/documentation/development/logging.html
