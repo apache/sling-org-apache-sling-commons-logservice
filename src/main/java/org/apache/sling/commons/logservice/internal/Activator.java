@@ -16,6 +16,7 @@
  */
 package org.apache.sling.commons.logservice.internal;
 
+import org.osgi.annotation.bundle.Header;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
@@ -31,6 +32,7 @@ import org.osgi.util.tracker.ServiceTrackerCustomizer;
  * log service bundle. This activator registers the <code>LogService</code> and
  * <code>LogReaderService</code>.
  */
+@Header(name = Constants.BUNDLE_ACTIVATOR, value = "${@class}")
 public class Activator implements BundleActivator {
 
     private volatile ServiceTracker<LogReaderService, LogReaderService> logReaderTracker;
