@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.commons.logservice.internal;
 
@@ -54,8 +56,8 @@ public class SLF4JSupport implements LogListener {
     /** Framework start level. */
     private final FrameworkStartLevel startLevel;
 
-    private final List<String> logServiceLoggers = Arrays.asList(LOGGER_EVENT_FRAMEWORK, LOGGER_EVENT_BUNDLE,
-            LOGGER_EVENT_SERVICE, LOGGER_EVENT_LOG_SERVICE);
+    private final List<String> logServiceLoggers =
+            Arrays.asList(LOGGER_EVENT_FRAMEWORK, LOGGER_EVENT_BUNDLE, LOGGER_EVENT_SERVICE, LOGGER_EVENT_LOG_SERVICE);
 
     public SLF4JSupport(final FrameworkStartLevel startLevel) {
         this.startLevel = startLevel;
@@ -69,8 +71,8 @@ public class SLF4JSupport implements LogListener {
     private void doLog(final LogEntry logEntry) {
         // get the logger for the bundle
         final boolean isLogService = logServiceLoggers.contains(logEntry.getLoggerName());
-        final Logger logger = LoggerFactory
-                .getLogger(isLogService ? getLoggerName(logEntry.getBundle()) : logEntry.getLoggerName());
+        final Logger logger =
+                LoggerFactory.getLogger(isLogService ? getLoggerName(logEntry.getBundle()) : logEntry.getLoggerName());
         if (!isEnabled(logger, logEntry)) {
             // early exit, this message will not be logged, don't do any work...
             return;
@@ -119,18 +121,18 @@ public class SLF4JSupport implements LogListener {
             } else if (sr.getProperty(COMPONENT_NAME) != null) {
                 msg.append(sr.getProperty(COMPONENT_NAME)).append(',');
             } else if (sr.getProperty(Constants.SERVICE_DESCRIPTION) != null) {
-                msg.append(sr.getProperty(Constants.SERVICE_DESCRIPTION)).append(
-                    ',');
+                msg.append(sr.getProperty(Constants.SERVICE_DESCRIPTION)).append(',');
             }
             msg.append(sr.getProperty(Constants.SERVICE_ID))
-                .append(", ")
-                .append(Arrays.toString((String[]) sr.getProperty(Constants.OBJECTCLASS)))
-                .append("] ");
+                    .append(", ")
+                    .append(Arrays.toString((String[]) sr.getProperty(Constants.OBJECTCLASS)))
+                    .append("] ");
         }
 
         if (logEntry.getMessage() != null) {
             msg.append(logEntry.getMessage());
-            if (LOGGER_EVENT_FRAMEWORK.equals(logEntry.getLoggerName()) && logEntry.getMessage().contains(SL_MARKER)) {
+            if (LOGGER_EVENT_FRAMEWORK.equals(logEntry.getLoggerName())
+                    && logEntry.getMessage().contains(SL_MARKER)) {
                 msg.append(" to ");
                 msg.append(String.valueOf(this.startLevel.getStartLevel()));
             }
@@ -143,41 +145,41 @@ public class SLF4JSupport implements LogListener {
 
         String message = msg.toString();
         switch (logEntry.getLogLevel()) {
-        case DEBUG:
-            logger.debug(message, exception);
+            case DEBUG:
+                logger.debug(message, exception);
                 break;
-        case INFO:
-            logger.info(message, exception);
+            case INFO:
+                logger.info(message, exception);
                 break;
-        case WARN:
-            logger.warn(message, exception);
+            case WARN:
+                logger.warn(message, exception);
                 break;
-        case ERROR:
-            logger.error(message, exception);
+            case ERROR:
+                logger.error(message, exception);
                 break;
-        case TRACE:
+            case TRACE:
                 logger.trace(message, exception);
                 break;
-        case AUDIT: // we treat audit as trace
-            logger.trace(message, exception);
-            break;
+            case AUDIT: // we treat audit as trace
+                logger.trace(message, exception);
+                break;
         }
     }
 
     static boolean isEnabled(final Logger logger, final LogEntry logEntry) {
         switch (logEntry.getLogLevel()) {
-        case DEBUG:
-            return logger.isDebugEnabled();
-        case INFO:
-            return logger.isInfoEnabled();
-        case WARN:
-            return logger.isWarnEnabled();
-        case ERROR:
-            return logger.isErrorEnabled();
-        case TRACE:
-            return logger.isTraceEnabled();
-        case AUDIT: // we treat audit as trace
-            return logger.isTraceEnabled();
+            case DEBUG:
+                return logger.isDebugEnabled();
+            case INFO:
+                return logger.isInfoEnabled();
+            case WARN:
+                return logger.isWarnEnabled();
+            case ERROR:
+                return logger.isErrorEnabled();
+            case TRACE:
+                return logger.isTraceEnabled();
+            case AUDIT: // we treat audit as trace
+                return logger.isTraceEnabled();
         }
         return false;
     }

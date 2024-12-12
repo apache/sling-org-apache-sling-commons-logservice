@@ -1,18 +1,20 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *   http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
  */
 package org.apache.sling.commons.logservice.internal;
 
@@ -46,8 +48,8 @@ public class Activator implements BundleActivator {
         final Bundle systemBundle = context.getBundle(Constants.SYSTEM_BUNDLE_ID);
 
         final SLF4JSupport listener = new SLF4JSupport(systemBundle.adapt(FrameworkStartLevel.class));
-        this.logReaderTracker = new ServiceTracker<>(context, LogReaderService.class,
-                new ServiceTrackerCustomizer<LogReaderService, LogReaderService>() {
+        this.logReaderTracker = new ServiceTracker<>(
+                context, LogReaderService.class, new ServiceTrackerCustomizer<LogReaderService, LogReaderService>() {
 
                     @Override
                     public LogReaderService addingService(final ServiceReference<LogReaderService> reference) {
@@ -60,16 +62,15 @@ public class Activator implements BundleActivator {
                     }
 
                     @Override
-                    public void modifiedService(final ServiceReference<LogReaderService> reference,
-                            final LogReaderService service) {
+                    public void modifiedService(
+                            final ServiceReference<LogReaderService> reference, final LogReaderService service) {
                         // nothing to do
                     }
 
                     @Override
-                    public void removedService(final ServiceReference<LogReaderService> reference,
-                            final LogReaderService service) {
+                    public void removedService(
+                            final ServiceReference<LogReaderService> reference, final LogReaderService service) {
                         service.removeLogListener(listener);
-
                     }
                 });
         this.logReaderTracker.open();
